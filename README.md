@@ -1,202 +1,140 @@
-# GEF MCP Server
+# GEF MCP Server v2.0
 
-GDB Enhanced Features (GEF) 的 Model Context Protocol (MCP) 服务器实现，支持通过 SSE (Server-Sent Events) 进行连接。
+**玄幕安全团队 - guaidao2 开发** 🛡️
 
-## 功能特性
+**GDB Enhanced Features** 的 Model Context Protocol (MCP) 服务器实现，支持通过 SSE 或 stdio 进行远程调试。专为安全测试和 CTF 竞赛优化。
 
-- **GEF/GDB 集成**: 自动加载 GEF 插件，提供增强的调试功能
-- **多会话支持**: 最多支持 4 个并发调试会话
-- **完整命令集**: 支持所有 GEF 和 GDB 原生命令
-- **SSE 传输**: 通过 HTTP SSE 进行实时通信
-- **PTY 终端**: 模拟真实终端环境，支持交互式调试
+## 特性
+
+- **GEF/GDB 集成**: 自动加载 GEF 插件，提供增强调试能力
+- **多会话**: 最多 4 个并发调试会话
+- **SSE + stdio 双模式**: 远程 HTTP SSE 或本地 Claude Desktop stdio
+- **PTY 终端**: 真实终端模拟，支持交互式调试
+- **28+ 专用工具**: 覆盖调试、内存操作、二进制分析、CTF exploit 开发全流程
+- **CTF 定向增强**: checksec、ROP 搜索、format-string 检测、patch、assemble 等
+- **安全防护**: 路径注入消杀、换行防护、输出大小限制
+- **后台僵尸回收**: 自动清理崩溃的会话
 
 ## 安装
-
-### 1. 安装依赖
 
 ```bash
 cd /root/Desktop/gef-mcp
 pip install -r requirements.txt
 ```
 
-### 2. 安装 GEF (如果尚未安装)
+### 安装 GEF（如未安装）
 
 ```bash
-# 方法1: 使用官方安装脚本
 bash -c "$(curl -fsSL https://gef.blah.cat/sh)"
-
-# 方法2: 手动安装
-wget -O ~/.gdbinit-gef.py https://raw.githubusercontent.com/hugsy/gef/main/gef.py
-echo "source ~/.gdbinit-gef.py" >> ~/.gdbinit
 ```
 
-## 使用方法
-
-### 启动服务器
+## 使用
 
 ```bash
-# 默认 SSE 模式，监听 0.0.0.0:8000
+# SSE 模式 (默认 :8000)
 python server.py
 
-# 指定主机和端口
+# 指定地址和端口
 python server.py --host 127.0.0.1 --port 8080
 
-# 使用 stdio 模式
+# stdio 模式 (Claude Desktop)
 python server.py --transport stdio
 ```
 
 ### MCP 端点
 
-- **SSE 端点**: `http://localhost:8000/sse`
-- **消息端点**: `http://localhost:8000/messages/`
+- SSE 端点: `http://localhost:8000/sse`
+- 消息端点: `http://localhost:8000/messages/`
 
-## 可用工具
+## 工具列表
 
 ### 会话管理
 
-| 工具名 | 描述 |
-|--------|------|
-| `create_session` | 创建新的 GEF 调试会话 |
-| `list_sessions` | 列出所有活跃的会话 |
-| `close_session` | 关闭指定会话 |
+| 工具 | 描述 |
+|------|------|
+| `create_session` | 创建新调试会话 |
+| `list_sessions` | 列出所有活跃会话 |
+| `close_session` | 关闭会话 |
 
-### 文件和调试
+### 文件与启动
 
-| 工具名 | 描述 |
-|--------|------|
-| `load_file` | 加载目标二进制文件 |
-| `start_debugging` | 使用 `gef 文件名` 方式启动调试 (Kali新版) |
-| `set_breakpoint` | 设置断点 |
-| `run` | 运行程序 |
+| 工具 | 描述 |
+|------|------|
+| `load_file` | 加载目标二进制 |
+| `start_debugging` | 加载文件 + 显示 GEF 上下文 |
+
+### 断点
+
+| 工具 | 描述 |
+|------|------|
+| `set_breakpoint` | 设置断点 (函数/地址/文件:行) |
+| `delete_breakpoint` | 按编号删除断点 |
+| `list_breakpoints` | 列出所有断点/监视点 |
+| `watchpoint` | 设置数据断点 (读/写/访问) |
+
+### 执行控制
+
+| 工具 | 描述 |
+|------|------|
+| `run` | 运行程序 (带参数) |
 | `continue` | 继续执行 |
-| `step` | 单步执行 (进入函数) |
-| `next` | 单步执行 (跳过函数) |
+| `step` | 单步进入 |
+| `next` | 单步跳过 |
 
-### 内存和寄存器
+### 寄存器 / 栈
 
-| 工具名 | 描述 |
-|--------|------|
-| `get_registers` | 获取寄存器状态 |
-| `examine_memory` | 检查内存内容 |
+| 工具 | 描述 |
+|------|------|
+| `get_registers` | 获取 CPU 寄存器 |
+| `get_backtrace` | 函数调用回溯 |
+| `info_frame` | 当前栈帧详细信息 |
+
+### 反汇编
+
+| 工具 | 描述 |
+|------|------|
 | `disassemble` | 反汇编代码 |
-| `get_backtrace` | 获取调用栈 |
 
-### GEF 增强命令
+### 内存操作
 
-| 工具名 | 描述 |
-|--------|------|
-| `vmmap` | 显示虚拟内存映射 |
-| `heap` | 显示堆信息 |
-| `telescope` | 递归解引用内存 (望远镜命令) |
-| `search_pattern` | 在内存中搜索模式 |
+| 工具 | 描述 |
+|------|------|
+| `examine_memory` | 检查内存 (x/8xg) |
+| `write_memory` | 向内存写入值 |
+| `patch_byte` | GEF patch 修改字节 |
+| `hexdump` | 十六进制 + ASCII 视图 |
+| `telescope` | 递归解引用 (望远镜) |
+| `search_pattern` | 搜索内存模式 |
+| `search_strings` | 搜索可打印字符串 |
 
-### 通用命令
+### GEF 增强
 
-| 工具名 | 描述 |
-|--------|------|
-| `execute_command` | 执行任意 GEF/GDB 命令 |
+| 工具 | 描述 |
+|------|------|
+| `vmmap` | 虚拟内存映射 |
+| `heap` | 堆信息 |
+| `checksec` | 🔐 安全缓解措施检查 |
+| `got_plt` | GOT/PLT 信息 |
+| `get_context` | 完整调试上下文 |
+| `get_sections` | 节区信息 |
+| `get_entry_point` | 入口点地址 |
+| `elf_info` | ELF 文件头信息 |
+| `reset_cache` | 重置 GEF 缓存 |
 
-## 使用示例
+### CTF 专用 🔥
 
-### 基本调试流程
-
-```python
-# 1. 创建会话
-result = await call_tool("create_session", {})
-session_id = result["session_id"]
-
-# 2. 加载目标文件 (方式1: 使用 load_file)
-await call_tool("load_file", {
-    "session_id": session_id,
-    "filepath": "/path/to/binary"
-})
-
-# 2. 加载目标文件 (方式2: 使用 start_debugging - 类似 gef 文件名)
-await call_tool("start_debugging", {
-    "session_id": session_id,
-    "filepath": "/path/to/binary"
-})
-
-# 3. 设置断点
-await call_tool("set_breakpoint", {
-    "session_id": session_id,
-    "location": "main"
-})
-
-# 4. 运行程序
-await call_tool("run", {
-    "session_id": session_id,
-    "args": "--help"
-})
-
-# 5. 获取寄存器状态
-await call_tool("get_registers", {
-    "session_id": session_id
-})
-
-# 6. 检查内存
-await call_tool("examine_memory", {
-    "session_id": session_id,
-    "address": "$rsp",
-    "count": 16
-})
-
-# 7. 使用 GEF 的 telescope 命令
-await call_tool("telescope", {
-    "session_id": session_id,
-    "address": "$rsp",
-    "count": 10
-})
-
-# 8. 关闭会话
-await call_tool("close_session", {
-    "session_id": session_id
-})
-```
-
-### 执行任意 GEF 命令
-
-```python
-# 查看所有函数
-await call_tool("execute_command", {
-    "session_id": session_id,
-    "command": "info functions"
-})
-
-# 查看符号表
-await call_tool("execute_command", {
-    "session_id": session_id,
-    "command": "info variables"
-})
-
-# 设置环境变量后运行
-await call_tool("execute_command", {
-    "session_id": session_id,
-    "command": "set environment LD_PRELOAD=/path/to/lib.so"
-})
-```
-
-## 配置说明
-
-### GEF 配置
-
-服务器会自动配置以下 GEF 选项：
-
-```bash
-gef config context.clear_screen False
-gef config context.layout "regs stack code source"
-set pagination off
-set confirm off
-```
-
-### 环境变量
-
-- `GEF_MCP_HOST`: 服务器主机地址 (默认: 0.0.0.0)
-- `GEF_MCP_PORT`: 服务器端口 (默认: 8000)
+| 工具 | 描述 |
+|------|------|
+| `rop_search` | 搜索 ROP gadgets |
+| `rop_search_all` | 列出所有 gadgets |
+| `attach_process` | 附加到进程 |
+| `detach_process` | 从进程分离 |
+| `format_string_helper` | 检测格式化字符串漏洞 |
+| `assemble` | 写入汇编指令 |
+| `nop_sled` | 写入 NOP chain |
+| `execute_command` | 任意 GEF/GDB 命令 |
 
 ## 与 Claude Desktop 集成
-
-在 `claude_desktop_config.json` 中添加：
 
 ```json
 {
@@ -209,40 +147,48 @@ set confirm off
 }
 ```
 
-或者使用 SSE 模式：
+## 安全说明
 
-```json
-{
-  "mcpServers": {
-    "gef": {
-      "url": "http://localhost:8000/sse"
-    }
-  }
-}
+- `filepath` 参数经过注入消杀，拒绝含有 `!` `;` `|` 等 shell 元字符的路径
+- `pattern` 参数拒绝换行符，防止命令注入
+- `execute_command` 按设计执行任意命令——请确保调用来源可信
+- 所有会话输出有 50KB 大小限制，防止内存膨胀
+
+## 调试流程示例 (CTF)
+
+```python
+# 1. 创建会话
+session = await call_tool("create_session", {})
+sid = session["session_id"]
+
+# 2. 加载目标
+await call_tool("load_file", {"session_id": sid, "filepath": "./vuln"})
+
+# 3. 安全检查
+sec = await call_tool("checksec", {"session_id": sid})
+# → NX: enabled | PIE: disabled | Canary: enabled ...
+
+# 4. 查看内存布局
+map = await call_tool("vmmap", {"session_id": sid})
+
+# 5. 断点 + 运行
+await call_tool("set_breakpoint", {"session_id": sid, "location": "main"})
+await call_tool("run", {"session_id": sid})
+
+# 6. 搜索 ROP gadgets
+gadgets = await call_tool("rop_search", {"session_id": sid, "gadget": "pop rdi"})
+
+# 7. 检查 GOT
+got = await call_tool("got_plt", {"session_id": sid})
+
+# 8. 修改内存
+await call_tool("write_memory", {
+    "session_id": sid,
+    "address": "0x601040",
+    "value": "0xdeadbeef"
+})
 ```
-
-## 故障排除
-
-### GEF 未加载
-
-如果 GEF 命令不可用，请检查：
-
-1. GEF 是否正确安装: `ls ~/.gdbinit-gef.py`
-2. GDB 版本是否支持 Python: `gdb -batch -ex "python print('OK')"`
-
-### 会话超时
-
-长时间运行的命令可能会超时，可以通过 `create_session` 的 `timeout` 参数调整超时时间。
-
-### 权限问题
-
-调试某些程序可能需要 root 权限，请确保服务器以适当的权限运行。
 
 ## 许可证
 
-MIT License
-
-## 参考
-
-- [GEF 官方文档](https://hugsy.github.io/gef/)
-- [MCP 协议规范](https://modelcontextprotocol.io/)
+MIT

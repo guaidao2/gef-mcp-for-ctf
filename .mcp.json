@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "gef": {
+      "command": "python",
+      "args": ["/root/Desktop/gef-mcp/server.py", "--transport", "stdio"]
+    }
+  }
+}
