@@ -10,7 +10,7 @@
 - **多会话**: 最多 4 个并发调试会话
 - **SSE + stdio 双模式**: 远程 HTTP SSE 或本地 Claude Desktop stdio
 - **PTY 终端**: 真实终端模拟，支持交互式调试
-- **28+ 专用工具**: 覆盖调试、内存操作、二进制分析、CTF exploit 开发全流程
+- **40+ 专用工具**: 覆盖调试、内存操作、二进制分析、CTF exploit 开发全流程
 - **CTF 定向增强**: checksec、ROP 搜索、format-string 检测、patch、assemble 等
 - **安全防护**: 路径注入消杀、换行防护、输出大小限制
 - **后台僵尸回收**: 自动清理崩溃的会话
